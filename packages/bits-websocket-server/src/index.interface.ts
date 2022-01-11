@@ -7,6 +7,7 @@ export interface CustomWebSocket extends WebSocket {
 export interface Auction {
     started: boolean,
     endDate?: Date,
+    terminated: boolean,
     item: {
         name: string;
         actualPrice: number;
@@ -22,7 +23,8 @@ export interface Auction {
 
 export enum WEBSOCKET_MESSAGE_TYPE {
     BID = "BID",
-    AUCTION = "AUCTION"
+    AUCTION = "AUCTION",
+    WIN = "WIN"
 }
 
 export interface WebSocketMessage {

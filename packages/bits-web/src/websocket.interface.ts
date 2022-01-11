@@ -1,6 +1,7 @@
 export enum WEBSOCKET_MESSAGE_TYPE {
     BID = "BID",
-    AUCTION = "AUCTION"
+    AUCTION = "AUCTION",
+    WIN = "WIN"
 }
 
 export interface WebSocketMessage {
@@ -10,6 +11,7 @@ export interface WebSocketMessage {
 
 export interface Auction {
     started: boolean,
+    terminated: boolean,
     endDate?: Date,
     item: {
         name: string;

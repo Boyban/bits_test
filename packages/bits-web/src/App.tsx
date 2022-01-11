@@ -8,15 +8,18 @@ import {Auction, WEBSOCKET_MESSAGE_TYPE, WebSocketMessage} from "./websocket.int
 function App() {
   const [auction, setAuction] = useState<Auction>({
     started: false,
+    terminated: false,
     item: {
       name: 'Chargement...',
       actualPrice: 1,
       startingPrice: 1,
     }
   })
+  const [isWin, setIsWin] = useState(false);
   const [socketUrl, setSocketUrl] = useState('ws://localhost:8080');
   const [messageHistory, setMessageHistory] = useState<any>([]);
   const playerRef = useRef<any>();
+  const [countdown, setCountdown] = useState(0);
 
   const {
     sendMessage,
@@ -31,18 +34,42 @@ function App() {
 
         if (data.type === WEBSOCKET_MESSAGE_TYPE.AUCTION)
           setAuction(data.metadata);
+        if (data.type === WEBSOCKET_MESSAGE_TYPE.WIN)
+          setIsWin(true);
       }
       setMessageHistory((prev: any) => prev.concat(lastMessage));
     }
   }, [lastMessage, setMessageHistory]);
 
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: 'Connecting',
-    [ReadyState.OPEN]: 'Open',
-    [ReadyState.CLOSING]: 'Closing',
-    [ReadyState.CLOSED]: 'Closed',
-    [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-  }[readyState];
+  const addABid = (value: number) => {
+    sendMessage(JSON.stringify(
+        {
+          type: WEBSOCKET_MESSAGE_TYPE.BID,
+          metadata: {
+            value
+          }
+        }
+    ))
+  }
+
+  let timer: any = null;
+  useEffect(() => {
+    if (timer)
+      clearInterval(timer);
+    timer = setInterval(() => {
+      if (!auction.endDate)
+        return;
+      const date = new Date();
+      const endDate = new Date(auction.endDate);
+
+      let difference = Math.abs((endDate.getTime() - date.getTime()) / 1000);
+      setCountdown(difference)
+    }, 1000)
+
+    return () => {
+      if (timer) clearInterval(timer);
+    }
+  }, [auction])
 
   // @ts-ignore
   return (
@@ -62,32 +89,43 @@ function App() {
         <div className="container">
           <div />
           <div className="bottom-content">
-            <div className="bids">
-              <div className="bid">
-                { auction.item.actualPrice + 1 }€
-              </div>
-              <div className="bid">
-                { auction.item.actualPrice + 2 }€
+            {
+              auction.started && !auction.terminated &&
+                <div className="bids">
+                  <div className="bid" onClick={() => addABid( auction.item.actualPrice + 1 )}>
+                    { auction.item.actualPrice + 1 }€
+                  </div>
+                  <div className="bid" onClick={() => addABid( auction.item.actualPrice + 2 )}>
+                    { auction.item.actualPrice + 2 }€
 
-              </div>
-              <div className="bid">
-                { auction.item.actualPrice + 3 }€
-              </div>
-            </div>
-            <div className="controls">
-              <div className="header">
-                <div className="controls_header__left">
-                  { auction.item.name }
+                  </div>
+                  <div className="bid" onClick={() => addABid( auction.item.actualPrice + 3 )}>
+                    { auction.item.actualPrice + 3 }€
+                  </div>
                 </div>
-                <div className="controls_header__right">
-                  { auction.item.actualPrice }€
-                </div>
-              </div>
+            }
 
-              <div className="countdown">
-                43s
-              </div>
-            </div>
+            {isWin && <div className="win">
+              Vous avez remporté cette enchère pour {auction.item.actualPrice}€
+            </div>}
+
+            {
+              auction.started && !auction.terminated &&
+                <div className="controls">
+                  <div className="header">
+                    <div className="controls_header__left">
+                      { auction.item.name }
+                    </div>
+                    <div className="controls_header__right">
+                      { auction.item.actualPrice }€
+                    </div>
+                  </div>
+
+                  <div className="countdown">
+                    {countdown.toFixed(0)}s
+                  </div>
+                </div>
+            }
           </div>
         </div>
       </div>
