@@ -93,6 +93,7 @@ wss.on("connection", function connection(ws: CustomWebSocket, req) {
         endDate.setMinutes(endDate.getMinutes() + 1);
         auction.started = true;
         auction.endDate = endDate;
+        broadcast_auction();
     }
 });
 
