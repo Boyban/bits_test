@@ -1,0 +1,12 @@
+{
+  "name": "bits-test-workspace",
+  "author": "Yohan Le Quéré",
+  "description": "Bits Test workspace",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "scripts": {}
+}
