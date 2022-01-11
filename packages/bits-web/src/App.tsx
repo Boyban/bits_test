@@ -20,6 +20,8 @@ function App() {
   const [messageHistory, setMessageHistory] = useState<any>([]);
   const playerRef = useRef<any>();
   const [countdown, setCountdown] = useState(0);
+  const [isCustomBid, setIsCustomBid] = useState<boolean>(false);
+  const [bidInput, setBidInput] = useState(0);
 
   const {
     sendMessage,
@@ -32,8 +34,11 @@ function App() {
       if (lastMessage.data) {
         const data: WebSocketMessage = JSON.parse(lastMessage.data);
 
-        if (data.type === WEBSOCKET_MESSAGE_TYPE.AUCTION)
+        if (data.type === WEBSOCKET_MESSAGE_TYPE.AUCTION) {
           setAuction(data.metadata);
+          setBidInput(data.metadata.item.actualPrice + 3)
+        }
+
         if (data.type === WEBSOCKET_MESSAGE_TYPE.WIN)
           setIsWin(true);
       }
@@ -99,9 +104,21 @@ function App() {
                     { auction.item.actualPrice + 2 }€
 
                   </div>
-                  <div className="bid" onClick={() => addABid( auction.item.actualPrice + 3 )}>
-                    { auction.item.actualPrice + 3 }€
-                  </div>
+                  {
+                    !isCustomBid && <div className="bid" onClick={() => setIsCustomBid(true)}>
+                        Autre
+                      </div>
+                  }
+
+                  {
+                    isCustomBid && <div className="bid custom-bid">
+                        <input type="number" value={bidInput} onChange={(e) => setBidInput(Number(e.target.value)) }/>
+                        <button onClick={() => {
+                          addABid(Number(bidInput));
+                          setIsCustomBid(false)
+                        }}>Go</button>
+                      </div>
+                  }
                 </div>
             }
 
